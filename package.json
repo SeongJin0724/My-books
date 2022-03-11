@@ -18,6 +18,7 @@
     "axios": "^0.19.2",
     "connected-react-router": "^6.8.0",
     "moment": "^2.29.1",
+    "netlify": "^11.0.0",
     "rc-textarea": "^0.3.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

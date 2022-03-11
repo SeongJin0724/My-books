@@ -1,17 +1,20 @@
 import React, { useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { push } from 'connected-react-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
+import { goBack } from 'connected-react-router';
 
-import List from '../components/List';
+import Edit from '../components/Edit';
 import { RootState } from '../redux/modules/rootReducer';
 import { BookResType } from '../types';
 import { logout as logoutSaga } from '../redux/modules/auth';
 import {
+  editBook as editBookSaga,
   getBooks as getBooksSaga,
-  deleteBook as deleteBookSaga,
 } from '../redux/modules/books';
 
-const ListContainer: React.FC = (props) => {
+const EditContainer = () => {
+  const { id } = useParams();
+  const bookId = Number(id) || -1;
   const books = useSelector<RootState, BookResType[] | null>(
     (state) => state.books.books,
   );
@@ -21,48 +24,40 @@ const ListContainer: React.FC = (props) => {
   const error = useSelector<RootState, Error | null>(
     (state) => state.books.error,
   );
-
   const dispatch = useDispatch();
 
   const getBooks = useCallback(() => {
     dispatch(getBooksSaga());
   }, [dispatch]);
 
-  const deleteBook = useCallback(
-    (bookId) => {
-      dispatch(deleteBookSaga(bookId));
+  const edit = useCallback(
+    (book) => {
+      dispatch(editBookSaga(bookId, book));
     },
-    [dispatch],
+    [dispatch, bookId],
   );
 
-  const goAdd = useCallback(() => {
-    dispatch(push('/add'));
+  const back = useCallback(() => {
+    dispatch(goBack());
   }, [dispatch]);
-
-  const goEdit = useCallback(
-    (bookId: number) => {
-      dispatch(push(`/edit/${bookId}`));
-    },
-    [dispatch],
-  );
 
   const logout = useCallback(() => {
     dispatch(logoutSaga());
   }, [dispatch]);
 
   return (
-    <List
-      {...props}
-      books={books}
+    <Edit
+      book={
+        books === null ? null : books.find((book) => book.bookId === bookId)
+      }
       loading={loading}
       error={error}
+      edit={edit}
       getBooks={getBooks}
-      deleteBook={deleteBook}
-      goAdd={goAdd}
-      goEdit={goEdit}
+      back={back}
       logout={logout}
     />
   );
 };
 
-export default ListContainer;
+export default EditContainer;

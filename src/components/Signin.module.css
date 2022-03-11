@@ -1,4 +1,37 @@
 /* Signin.module.css */
+.popup {
+  width: 350px;
+  height: 200px;
+  position: fixed;
+  top: 100px;
+  left: 40%;
+  background-color: whitesmoke;
+  border: 1px solid gainsboro;
+  z-index: 1;
+}
+.popup_close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: whitesmoke;
+  border: none;
+}
+.popup_title {
+  width: 90%;
+  margin: 40px auto 0;
+  text-align: center;
+  color: #642828;
+}
+.popup_id {
+  width: 50%;
+  margin: 15px auto;
+  text-align: center;
+}
+.popup_password {
+  width: 50%;
+  margin: 0 auto;
+  text-align: center;
+}
 
 .signin_row {
     height: 100vh;

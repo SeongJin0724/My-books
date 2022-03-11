@@ -1,6 +1,7 @@
 import { Button, Col, Input, Row } from "antd";
 import React, { useRef } from "react";
 import { LoginReqType } from "../types";
+import Popup from "./Popup";
 import styles from './Signin.module.css';
 
 
@@ -15,6 +16,7 @@ const Signin: React.FC<SigninProps> = ({login}) => {
 
     return( 
         <Row align="middle" className={styles.signin_row}>
+            <Popup/>
             <Col span={24}>
                 <Row className={styles.signin_contents}>
                     <Col span={12}>

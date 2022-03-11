@@ -1,74 +1,106 @@
-import { push } from "connected-react-router";
-import { Action, createActions, handleActions } from "redux-actions";
-import { call, put, select, takeEvery } from "redux-saga/effects";
-import TokenService from "../../services/TokenService";
-import UserService from "../../services/UserService";
-import { AuthState, LoginReqType } from "../../types";
+import { AnyAction } from 'redux';
+import { createActions, handleActions } from 'redux-actions';
+import { takeEvery, put, call, select } from 'redux-saga/effects';
+import { push } from 'connected-react-router';
 
+import { LoginReqType } from '../../types';
+import { getTokenFromState } from '../utils';
+import { success as booksSuccess } from './books';
+import UserService from '../../services/UserService';
+import TokenService from '../../services/TokenService';
+
+export interface AuthState {
+  token: string | null;
+  loading: boolean;
+  error: Error | null;
+}
 
 const initialState: AuthState = {
-    token: null,
-    loading: false,
-    error: null,
+  token: null,
+  loading: false,
+  error: null,
 };
 
-const prefix = "my-books/auth";
+const options = {
+  prefix: 'my-books/auth',
+};
 
-export const {pending, success, fail} = createActions('PENDING', 'SUCCESS', 'FAIL', {prefix});
+export const { success, pending, fail } = createActions(
+  {
+    SUCCESS: (token: string) => ({ token }),
+  },
+  'PENDING',
+  'FAIL',
+  options,
+);
 
-const reducer = handleActions<AuthState, string>({
+const reducer = handleActions<AuthState, any>(
+  {
     PENDING: (state) => ({
-        ...state,
-        loading: true,
-        error: null,
+      ...state,
+      loading: true,
+      error: null,
     }),
     SUCCESS: (state, action) => ({
-        token: action.payload,
-        loading: false,
-        error: null,
+      ...state,
+      token: action.payload.token,
+      loading: false,
+      error: null,
     }),
-    FAIL: (state, action:any) => ({
-        ...state,
-        loading: false,
-        error: action.payload,
+    FAIL: (state, action) => ({
+      ...state,
+      loading: false,
+      error: action.payload,
     }),
-},
-initialState,
-{ prefix }
-)
+  },
+  initialState,
+  options,
+);
 
 export default reducer;
 
-// saga
-export const {login,logout} = createActions('LOGIN','LOGOUT',{prefix});
+export const { login, logout } = createActions(
+  {
+    LOGIN: ({ email, password }: LoginReqType) => ({
+      email,
+      password,
+    }),
+  },
+  'LOGOUT',
+  options,
+);
 
-function* loginSaga(action: Action<LoginReqType>) {
-    try {
-        yield put(pending());
-        const token:string = yield call(UserService.login, action.payload);
-        TokenService.set(token);
-        yield put(success(token));
-        yield put(push("/"));
-    } catch (error) {
-        yield put(fail(new Error(error?.response?.data?.error || "UNKNOWN_ERROR")))
-    }
+export function* sagas() {
+  yield takeEvery(`${options.prefix}/LOGIN`, loginSaga);
+  yield takeEvery(`${options.prefix}/LOGOUT`, logoutSaga);
+}
+
+interface LoginSagaAction extends AnyAction {
+  payload: LoginReqType;
+}
+
+function* loginSaga(action: LoginSagaAction) {
+  try {
+    yield put(pending());
+    const token: string = yield call(UserService.login, action.payload);
+    TokenService.set(token);
+    yield put(success(token));
+    yield put(push('/'));
+  } catch (error) {
+    yield put(fail(new Error(error?.response?.data?.error || 'UNKNOWN_ERROR')));
+  }
 }
 
 function* logoutSaga() {
-    try {
-        yield put(pending());
-        const token:string = yield select(state => state.auth.token);
-        yield call(UserService.logout, token);
-        TokenService.set(token);
-        yield put(success(token));
-    } catch (error) {
-    } finally {
-        TokenService.remove();
-        yield put(success(null));
-    }
-}
-
-export function* authSaga() {
-    yield takeEvery(`${prefix}/LOGIN`, loginSaga)
-    yield takeEvery(`${prefix}/LOGOUT`, logoutSaga)
+  try {
+    yield put(booksSuccess(null));
+    yield put(pending());
+    const token: string = yield select(getTokenFromState);
+    yield call(UserService.logout, token);
+  } catch (error) {
+    // console.log(error);
+  } finally {
+    TokenService.remove();
+    yield put(success(null));
+  }
 }
